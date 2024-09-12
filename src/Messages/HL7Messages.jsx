@@ -21,22 +21,22 @@ const HL7Messages = () => {
     return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
   };
 
-  useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        const data = await getHL7Messages();
-        const parsedMessages = data
-          .trim()
-          .split('\n')
-          .map((msg) => JSON.parse(msg));
-        setMessages(parsedMessages);
-      } catch (error) {
-        setError('Error al obtener los mensajes.', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchMessages = async () => {
+    try {
+      const data = await getHL7Messages();
+      const parsedMessages = data
+        .trim()
+        .split('\n')
+        .map((msg) => JSON.parse(msg));
+      setMessages(parsedMessages);
+    } catch (error) {
+      setError('Error al obtener los mensajes.', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchMessages();
 
     const socket = io('http://localhost:8000');
@@ -58,6 +58,10 @@ const HL7Messages = () => {
   const handleSearchResults = (searchResults) => {
     console.log('Resultados de búsqueda:', searchResults);
     setMessages(searchResults);
+  };
+
+  const handleMessageSent = () => {
+    fetchMessages();
   };
 
   if (loading) return <p>Cargando...</p>;
@@ -88,41 +92,38 @@ const HL7Messages = () => {
                 </tr>
               </thead>
               <tbody>
-  {messages.slice().reverse().map((message, index) => {
-    console.log('Mensaje:', message); // Verifica el contenido del mensaje
-
-    return Array.isArray(message.OBX) ? (
-      message.OBX.map((obx, obxIndex) => (
-        <tr key={obxIndex}>
-          <td>{message.MSH?.controlId || 'No disponible'}</td>
-          <td>{message.OBR?.orderNumber || 'No disponible'}</td>
-          <td>{message.MSH?.messageType || 'No disponible'}</td>
-          <td>{message.MSH?.sendingApplication || 'No disponible'}</td>
-          <td>{message.PID?.patientId || 'No disponible'}</td>
-          <td>{message.PID?.patientName || 'No disponible'}</td>
-          <td>{formatDate(message.PID?.dob)}</td>
-          <td>{message.OBR?.testName || 'No disponible'}</td>
-          <td>{formatDate(message.OBR?.testDate)}</td>
-          <td>{obx.name}</td>
-          <td>{obx.results}</td>
-          <td>{formatDate(obx.resultsDate)}</td>
-        </tr>
-      ))
-    ) : (
-      <tr key={index}>
-        <td colSpan="12">No hay datos disponibles para este mensaje</td>
-      </tr>
-    );
-  })}
-</tbody>
-
+                {messages.slice().reverse().map((message, index) => (
+                  Array.isArray(message.OBX) ? (
+                    message.OBX.map((obx, obxIndex) => (
+                      <tr key={obxIndex}>
+                        <td>{message.MSH?.controlId || 'No disponible'}</td>
+                        <td>{message.OBR?.orderNumber || 'No disponible'}</td>
+                        <td>{message.MSH?.messageType || 'No disponible'}</td>
+                        <td>{message.MSH?.sendingApplication || 'No disponible'}</td>
+                        <td>{message.PID?.patientId || 'No disponible'}</td>
+                        <td>{message.PID?.patientName || 'No disponible'}</td>
+                        <td>{formatDate(message.PID?.dob)}</td>
+                        <td>{message.OBR?.testName || 'No disponible'}</td>
+                        <td>{formatDate(message.OBR?.testDate)}</td>
+                        <td>{obx.name}</td>
+                        <td>{obx.results}</td>
+                        <td>{formatDate(obx.resultsDate)}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr key={index}>
+                      <td colSpan="12">No hay datos disponibles para este mensaje</td>
+                    </tr>
+                  )
+                ))}
+              </tbody>
             </table>
           ) : (
             <p>No hay mensajes disponibles.</p>
           )}
         </div>
 
-        <SendMessage />
+        <SendMessage onMessageSent={handleMessageSent} />
 
         <h2 className="subtitle is-4">Usuarios Conectados: {connectedUsers}</h2>
       </div>
