@@ -1,5 +1,5 @@
 import NavBar from '@/components/navbar'
-import HL7Messages from './messages/HL7Messages'
+import HL7Messages from './messages/hL7Messages'
 
 function App() {
 
