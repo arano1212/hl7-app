@@ -30,7 +30,8 @@ const HL7Messages = () => {
         .map((msg) => JSON.parse(msg));
       setMessages(parsedMessages);
     } catch (error) {
-      setError('Error al obtener los mensajes.', error);
+      setError('Error al obtener los mensajes.');
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -49,9 +50,14 @@ const HL7Messages = () => {
       setConnectedUsers(clientCount);
     });
 
+    const intervalId = setInterval(() => {
+      fetchMessages();
+    }, 10000);
+
     return () => {
       socket.off('newConnection');
       socket.off('newHL7Message');
+      clearInterval(intervalId);
     };
   }, []);
 
